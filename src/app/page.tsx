@@ -1,95 +1,286 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
 
-export default function Home() {
+import { useEffect, useState } from 'react';
+import styles from './page.module.css';
+
+interface Marca {
+  codigo: string;
+  nome: string;
+}
+
+interface Modelo {
+  codigo: string;
+  nome: string;
+}
+
+interface Ano {
+  codigo: string;
+  nome: string;
+}
+
+interface Detalhes {
+  Valor: string;
+  Marca: string;
+  Modelo: string;
+  AnoModelo: number;
+  Combustivel: string;
+  CodigoFipe: string;
+}
+
+export default function App() {
+  const [marcas, setMarcas] = useState<Marca[]>([]);
+  const [modelos, setModelos] = useState<Modelo[]>([]);
+  const [anos, setAnos] = useState<Ano[]>([]);
+  const [detalhes, setDetalhes] = useState<Detalhes | null>(null);
+
+  const [selectedMarca, setSelectedMarca] = useState<string>('');
+  const [selectedModelo, setSelectedModelo] = useState<string>('');
+  const [selectedAno, setSelectedAno] = useState<string>('');
+
+  // Search states
+  const [marcaSearch, setMarcaSearch] = useState<string>('');
+  const [modeloSearch, setModeloSearch] = useState<string>('');
+  const [anoSearch, setAnoSearch] = useState<string>('');
+
+  // Filtered arrays
+  const [filteredMarcas, setFilteredMarcas] = useState<Marca[]>([]);
+  const [filteredModelos, setFilteredModelos] = useState<Modelo[]>([]);
+  const [filteredAnos, setFilteredAnos] = useState<Ano[]>([]);
+
+  // Show dropdown states
+  const [showMarcaDropdown, setShowMarcaDropdown] = useState<boolean>(false);
+  const [showModeloDropdown, setShowModeloDropdown] = useState<boolean>(false);
+  const [showAnoDropdown, setShowAnoDropdown] = useState<boolean>(false);
+
+  useEffect(() => {
+    fetch('/api/fipe?path=carros/marcas')
+      .then((res) => res.json())
+      .then((data: Marca[]) => {
+        setMarcas(data);
+        setFilteredMarcas(data);
+      });
+  }, []);
+
+  // Filter marcas based on search
+  useEffect(() => {
+    const filtered = marcas.filter((marca) =>
+      marca.nome.toLowerCase().includes(marcaSearch.toLowerCase())
+    );
+    setFilteredMarcas(filtered);
+  }, [marcas, marcaSearch]);
+
+  // Filter modelos based on search
+  useEffect(() => {
+    const filtered = modelos.filter((modelo) =>
+      modelo.nome.toLowerCase().includes(modeloSearch.toLowerCase())
+    );
+    setFilteredModelos(filtered);
+  }, [modelos, modeloSearch]);
+
+  // Filter anos based on search
+  useEffect(() => {
+    const filtered = anos.filter((ano) =>
+      ano.nome.toLowerCase().includes(anoSearch.toLowerCase())
+    );
+    setFilteredAnos(filtered);
+  }, [anos, anoSearch]);
+
+  useEffect(() => {
+    if (!selectedMarca) return;
+
+    fetch(`/api/fipe?path=carros/marcas/${selectedMarca}/modelos`)
+      .then((res) => res.json())
+      .then((data) => {
+        setModelos(data.modelos);
+        setFilteredModelos(data.modelos);
+      });
+  }, [selectedMarca]);
+
+  useEffect(() => {
+    if (!selectedMarca || !selectedModelo) return;
+
+    fetch(`/api/fipe?path=carros/marcas/${selectedMarca}/modelos/${selectedModelo}/anos`)
+      .then((res) => res.json())
+      .then((data: Ano[]) => {
+        setAnos(data);
+        setFilteredAnos(data);
+      });
+  }, [selectedMarca, selectedModelo]);
+
+  useEffect(() => {
+    if (!selectedMarca || !selectedModelo || !selectedAno) return;
+
+    fetch(`/api/fipe?path=carros/marcas/${selectedMarca}/modelos/${selectedModelo}/anos/${selectedAno}`)
+      .then((res) => res.json())
+      .then((data: Detalhes) => setDetalhes(data));
+  }, [selectedMarca, selectedModelo, selectedAno]);
+
+  const handleMarcaSelect = (marca: Marca) => {
+    setSelectedMarca(marca.codigo);
+    setMarcaSearch(marca.nome);
+    setShowMarcaDropdown(false);
+    // Reset dependent fields
+    setSelectedModelo('');
+    setSelectedAno('');
+    setModeloSearch('');
+    setAnoSearch('');
+    setDetalhes(null);
+  };
+
+  const handleModeloSelect = (modelo: Modelo) => {
+    setSelectedModelo(modelo.codigo);
+    setModeloSearch(modelo.nome);
+    setShowModeloDropdown(false);
+    // Reset dependent fields
+    setSelectedAno('');
+    setAnoSearch('');
+    setDetalhes(null);
+  };
+
+  const handleAnoSelect = (ano: Ano) => {
+    setSelectedAno(ano.codigo);
+    setAnoSearch(ano.nome);
+    setShowAnoDropdown(false);
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main className={styles.container}>
+      <div className={styles.content}>
+        <h1 className={styles.title}>🚗 Consulta Tabela FIPE</h1>
+        <p className={styles.subtitle}>Encontre o valor do seu veículo de forma rápida e fácil</p>
+        
+        <div className={styles.formContainer}>
+          {/* Marca Selector */}
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Marca do Veículo</label>
+            <div className={styles.searchContainer}>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Digite ou selecione a marca..."
+                value={marcaSearch}
+                onChange={(e) => setMarcaSearch(e.target.value)}
+                onFocus={() => setShowMarcaDropdown(true)}
+                onBlur={() => setTimeout(() => setShowMarcaDropdown(false), 200)}
+              />
+              {showMarcaDropdown && filteredMarcas.length > 0 && (
+                <div className={styles.dropdown}>
+                  {filteredMarcas.slice(0, 8).map((marca) => (
+                    <div
+                      key={marca.codigo}
+                      className={styles.dropdownItem}
+                      onClick={() => handleMarcaSelect(marca)}
+                    >
+                      {marca.nome}
+                    </div>
+                  ))}
+                  {filteredMarcas.length > 8 && (
+                    <div className={styles.dropdownInfo}>
+                      +{filteredMarcas.length - 8} mais opções...
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+          {/* Modelo Selector */}
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Modelo do Veículo</label>
+            <div className={styles.searchContainer}>
+              <input
+                type="text"
+                className={`${styles.searchInput} ${!selectedMarca ? styles.disabled : ''}`}
+                placeholder={selectedMarca ? "Digite ou selecione o modelo..." : "Primeiro selecione uma marca"}
+                value={modeloSearch}
+                onChange={(e) => setModeloSearch(e.target.value)}
+                onFocus={() => selectedMarca && setShowModeloDropdown(true)}
+                onBlur={() => setTimeout(() => setShowModeloDropdown(false), 200)}
+                disabled={!selectedMarca}
+              />
+              {showModeloDropdown && filteredModelos.length > 0 && (
+                <div className={styles.dropdown}>
+                  {filteredModelos.slice(0, 8).map((modelo) => (
+                    <div
+                      key={modelo.codigo}
+                      className={styles.dropdownItem}
+                      onClick={() => handleModeloSelect(modelo)}
+                    >
+                      {modelo.nome}
+                    </div>
+                  ))}
+                  {filteredModelos.length > 8 && (
+                    <div className={styles.dropdownInfo}>
+                      +{filteredModelos.length - 8} mais opções...
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Ano Selector */}
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Ano do Veículo</label>
+            <div className={styles.searchContainer}>
+              <input
+                type="text"
+                className={`${styles.searchInput} ${!selectedModelo ? styles.disabled : ''}`}
+                placeholder={selectedModelo ? "Digite ou selecione o ano..." : "Primeiro selecione um modelo"}
+                value={anoSearch}
+                onChange={(e) => setAnoSearch(e.target.value)}
+                onFocus={() => selectedModelo && setShowAnoDropdown(true)}
+                onBlur={() => setTimeout(() => setShowAnoDropdown(false), 200)}
+                disabled={!selectedModelo}
+              />
+              {showAnoDropdown && filteredAnos.length > 0 && (
+                <div className={styles.dropdown}>
+                  {filteredAnos.slice(0, 8).map((ano) => (
+                    <div
+                      key={ano.codigo}
+                      className={styles.dropdownItem}
+                      onClick={() => handleAnoSelect(ano)}
+                    >
+                      {ano.nome}
+                    </div>
+                  ))}
+                  {filteredAnos.length > 8 && (
+                    <div className={styles.dropdownInfo}>
+                      +{filteredAnos.length - 8} mais opções...
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {detalhes && (
+          <div className={styles.resultCard}>
+            <h2 className={styles.resultTitle}>
+              {detalhes.Modelo} ({detalhes.AnoModelo})
+            </h2>
+            <div className={styles.resultGrid}>
+              <div className={styles.resultItem}>
+                <span className={styles.resultLabel}>Marca:</span>
+                <span className={styles.resultValue}>{detalhes.Marca}</span>
+              </div>
+              <div className={styles.resultItem}>
+                <span className={styles.resultLabel}>Combustível:</span>
+                <span className={styles.resultValue}>{detalhes.Combustivel}</span>
+              </div>
+              <div className={styles.resultItem}>
+                <span className={styles.resultLabel}>Código FIPE:</span>
+                <span className={styles.resultValue}>{detalhes.CodigoFipe}</span>
+              </div>
+              <div className={`${styles.resultItem} ${styles.valueHighlight}`}>
+                <span className={styles.resultLabel}>Valor:</span>
+                <span className={styles.resultValuePrice}>{detalhes.Valor}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
