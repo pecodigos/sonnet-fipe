@@ -165,7 +165,7 @@ export default function App() {
               />
               {showMarcaDropdown && filteredMarcas.length > 0 && (
                 <div className={styles.dropdown}>
-                  {filteredMarcas.slice(0, 8).map((marca) => (
+                  {filteredMarcas.map((marca) => (
                     <div
                       key={marca.codigo}
                       className={styles.dropdownItem}
@@ -174,11 +174,6 @@ export default function App() {
                       {marca.nome}
                     </div>
                   ))}
-                  {filteredMarcas.length > 8 && (
-                    <div className={styles.dropdownInfo}>
-                      +{filteredMarcas.length - 8} mais opções...
-                    </div>
-                  )}
                 </div>
               )}
             </div>
@@ -200,7 +195,7 @@ export default function App() {
               />
               {showModeloDropdown && filteredModelos.length > 0 && (
                 <div className={styles.dropdown}>
-                  {filteredModelos.slice(0, 8).map((modelo) => (
+                  {filteredModelos.map((modelo) => (
                     <div
                       key={modelo.codigo}
                       className={styles.dropdownItem}
@@ -209,11 +204,6 @@ export default function App() {
                       {modelo.nome}
                     </div>
                   ))}
-                  {filteredModelos.length > 8 && (
-                    <div className={styles.dropdownInfo}>
-                      +{filteredModelos.length - 8} mais opções...
-                    </div>
-                  )}
                 </div>
               )}
             </div>
@@ -235,7 +225,7 @@ export default function App() {
               />
               {showAnoDropdown && filteredAnos.length > 0 && (
                 <div className={styles.dropdown}>
-                  {filteredAnos.slice(0, 8).map((ano) => (
+                  {filteredAnos.map((ano) => (
                     <div
                       key={ano.codigo}
                       className={styles.dropdownItem}
@@ -244,11 +234,6 @@ export default function App() {
                       {ano.nome}
                     </div>
                   ))}
-                  {filteredAnos.length > 8 && (
-                    <div className={styles.dropdownInfo}>
-                      +{filteredAnos.length - 8} mais opções...
-                    </div>
-                  )}
                 </div>
               )}
             </div>
