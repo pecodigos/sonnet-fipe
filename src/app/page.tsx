@@ -186,7 +186,7 @@ export default function App() {
               <input
                 type="text"
                 className={`${styles.searchInput} ${!selectedMarca ? styles.disabled : ''}`}
-                placeholder={selectedMarca ? "Digite ou selecione o modelo..." : "Primeiro selecione uma marca"}
+                placeholder={selectedMarca ? "Digite ou selecione o modelo..." : "Selecione uma marca"}
                 value={modeloSearch}
                 onChange={(e) => setModeloSearch(e.target.value)}
                 onFocus={() => selectedMarca && setShowModeloDropdown(true)}
@@ -216,7 +216,7 @@ export default function App() {
               <input
                 type="text"
                 className={`${styles.searchInput} ${!selectedModelo ? styles.disabled : ''}`}
-                placeholder={selectedModelo ? "Digite ou selecione o ano..." : "Primeiro selecione um modelo"}
+                placeholder={selectedModelo ? "Digite ou selecione o ano..." : "Selecione um modelo"}
                 value={anoSearch}
                 onChange={(e) => setAnoSearch(e.target.value)}
                 onFocus={() => selectedModelo && setShowAnoDropdown(true)}
