@@ -93,6 +93,17 @@ export default function App() {
       .then((data) => {
         setModelos(data.modelos);
         setFilteredModelos(data.modelos);
+        
+        // Também carrega todos os anos disponíveis para a marca
+        // Vamos buscar os anos do primeiro modelo como exemplo
+        if (data.modelos && data.modelos.length > 0) {
+          fetch(`/api/fipe?path=carros/marcas/${selectedMarca}/modelos/${data.modelos[0].codigo}/anos`)
+            .then((res) => res.json())
+            .then((anosData: Ano[]) => {
+              setAnos(anosData);
+              setFilteredAnos(anosData);
+            });
+        }
       });
   }, [selectedMarca]);
 
@@ -215,13 +226,13 @@ export default function App() {
             <div className={styles.searchContainer}>
               <input
                 type="text"
-                className={`${styles.searchInput} ${!selectedModelo ? styles.disabled : ''}`}
-                placeholder={selectedModelo ? "Digite ou selecione o ano..." : "Selecione um modelo"}
+                className={`${styles.searchInput} ${!selectedMarca ? styles.disabled : ''}`}
+                placeholder={selectedMarca ? "Digite ou selecione o ano..." : "Selecione uma marca"}
                 value={anoSearch}
                 onChange={(e) => setAnoSearch(e.target.value)}
-                onFocus={() => selectedModelo && setShowAnoDropdown(true)}
+                onFocus={() => selectedMarca && setShowAnoDropdown(true)}
                 onBlur={() => setTimeout(() => setShowAnoDropdown(false), 200)}
-                disabled={!selectedModelo}
+                disabled={!selectedMarca}
               />
               {showAnoDropdown && filteredAnos.length > 0 && (
                 <div className={styles.dropdown}>
@@ -265,6 +276,10 @@ export default function App() {
             </div>
           </div>
         )}
+        
+        <footer className={styles.footer}>
+          <p className={styles.footerText}>Feito por pecodigos</p>
+        </footer>
       </div>
     </main>
   );
