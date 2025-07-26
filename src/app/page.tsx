@@ -94,16 +94,25 @@ export default function App() {
         setModelos(data.modelos);
         setFilteredModelos(data.modelos);
         
-        // Também carrega todos os anos disponíveis para a marca
-        // Vamos buscar os anos do primeiro modelo como exemplo
-        if (data.modelos && data.modelos.length > 0) {
-          fetch(`/api/fipe?path=carros/marcas/${selectedMarca}/modelos/${data.modelos[0].codigo}/anos`)
+        // Carrega todos os anos disponíveis para todos os modelos da marca
+        const allYearsPromises = data.modelos.map((modelo: Modelo) =>
+          fetch(`/api/fipe?path=carros/marcas/${selectedMarca}/modelos/${modelo.codigo}/anos`)
             .then((res) => res.json())
-            .then((anosData: Ano[]) => {
-              setAnos(anosData);
-              setFilteredAnos(anosData);
-            });
-        }
+        );
+        
+        Promise.all(allYearsPromises)
+          .then((allYearsArrays) => {
+            // Combina todos os anos e remove duplicatas
+            const allYears = allYearsArrays.flat();
+            const uniqueYears = allYears.filter((ano, index, self) => 
+              index === self.findIndex((a) => a.codigo === ano.codigo)
+            );
+            // Ordena por ano (mais recente primeiro)
+            uniqueYears.sort((a, b) => b.nome.localeCompare(a.nome));
+            
+            setAnos(uniqueYears);
+            setFilteredAnos(uniqueYears);
+          });
       });
   }, [selectedMarca]);
 
@@ -119,6 +128,7 @@ export default function App() {
   }, [selectedMarca, selectedModelo]);
 
   useEffect(() => {
+    // Para buscar detalhes, precisamos de marca, modelo E ano
     if (!selectedMarca || !selectedModelo || !selectedAno) return;
 
     fetch(`/api/fipe?path=carros/marcas/${selectedMarca}/modelos/${selectedModelo}/anos/${selectedAno}`)
